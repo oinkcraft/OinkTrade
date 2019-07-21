@@ -16,6 +16,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
+import com.tek.otrade.trade.Trade;
+import com.tek.otrade.trade.TradeInterface;
+import com.tek.otrade.trade.TradeRole;
 import com.tek.rcore.misc.TextFormatter;
 
 public class OinkTradeCommand implements CommandExecutor {
@@ -54,7 +57,22 @@ public class OinkTradeCommand implements CommandExecutor {
 						OfflinePlayer oPlayer = Bukkit.getOfflinePlayer(otherUUID);
 						if(oPlayer.isOnline()) {
 							if(p.getWorld().equals(oPlayer.getPlayer().getWorld())) {
-								/* TODO START TRADE */
+								Trade trade = new Trade(oPlayer.getPlayer().getUniqueId(), p.getUniqueId());
+								Main.getInstance().getTradeManager().registerTrade(trade);
+								
+								TradeInterface senderInterface = new TradeInterface(TradeRole.SENDER, trade, p);
+								TradeInterface receiverInterface = new TradeInterface(TradeRole.RECEIVER, trade, oPlayer.getPlayer());
+								senderInterface.getClosedProperty().addWatcher(Main.getInstance().getTradeManager()::handleTradeEscape);
+								receiverInterface.getClosedProperty().addWatcher(Main.getInstance().getTradeManager()::handleTradeEscape);
+								trade.setSenderInterface(senderInterface);
+								trade.setReceiverInterface(receiverInterface);
+								
+								Main.getInstance().getRedstoneCore().getInterfaceManager()
+									.openInterface(p, receiverInterface);
+								Main.getInstance().getRedstoneCore().getInterfaceManager()
+									.openInterface(oPlayer.getPlayer(), senderInterface);
+								
+								requests.remove(p.getUniqueId());
 							} else {
 								p.sendMessage(Reference.PREFIX + TextFormatter.color("&cYou must be in the same world to trade."));
 							}
@@ -135,7 +153,7 @@ public class OinkTradeCommand implements CommandExecutor {
 			
 			else if(args[0].equalsIgnoreCase("spy")) {
 				if(p.hasPermission(Reference.PERMISSION_SPY)) {
-					/* TODO ADD LOGIC */
+					/* TODO ADD TRADE SELECTOR MENU ETC */
 				} else {
 					p.sendMessage(Reference.PREFIX + Reference.NO_PERMISSIONS);
 				}

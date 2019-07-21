@@ -6,6 +6,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.tek.otrade.OinkTradeCommand.OinkTradeCompleter;
+import com.tek.otrade.trade.TradeManager;
 import com.tek.rcore.RedstoneCore;
 
 import net.milkbowl.vault.economy.Economy;
@@ -16,6 +17,7 @@ public class Main extends JavaPlugin {
 	
 	private Economy economy;
 	private RedstoneCore redstoneCore;
+	private TradeManager tradeManager;
 	
 	@Override
 	public void onEnable() {
@@ -44,6 +46,8 @@ public class Main extends JavaPlugin {
 			return;
 		}
 		
+		tradeManager = new TradeManager();
+		
 		getCommand("oinktrade").setExecutor(new OinkTradeCommand());
 		getCommand("oinktrade").setTabCompleter(new OinkTradeCompleter());
 	}
@@ -58,6 +62,10 @@ public class Main extends JavaPlugin {
 	
 	public RedstoneCore getRedstoneCore() {
 		return redstoneCore;
+	}
+	
+	public TradeManager getTradeManager() {
+		return tradeManager;
 	}
 	
 }
