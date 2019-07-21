@@ -1,0 +1,11 @@
+name: OinkTrade
+version: 1.0
+api-version: 1.13
+main: com.tek.OinkTrade.Main
+
+loadbefore: [Vault]
+
+commands:
+  oinktrade:
+    description: Main OinkTrade command
+    aliases: [otrade, trade]
