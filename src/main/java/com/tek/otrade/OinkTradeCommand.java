@@ -50,7 +50,18 @@ public class OinkTradeCommand implements CommandExecutor {
 			else if(args[0].equalsIgnoreCase("accept")) {
 				if(p.hasPermission(Reference.PERMISSION_TRADE)) {
 					if(requests.containsKey(p.getUniqueId())) {
-						/* TODO ACCEPT REQUEST */
+						UUID otherUUID = requests.get(p.getUniqueId());
+						OfflinePlayer oPlayer = Bukkit.getOfflinePlayer(otherUUID);
+						if(oPlayer.isOnline()) {
+							if(p.getWorld().equals(oPlayer.getPlayer().getWorld())) {
+								/* TODO START TRADE */
+							} else {
+								p.sendMessage(Reference.PREFIX + TextFormatter.color("&cYou must be in the same world to trade."));
+							}
+						} else {
+							requests.remove(p.getUniqueId());
+							p.sendMessage(Reference.PREFIX + TextFormatter.color("&cThis player is no longer online."));
+						}
 					} else {
 						p.sendMessage(Reference.PREFIX + TextFormatter.color("&cYou have no trading requests on hold."));
 					}
@@ -62,7 +73,7 @@ public class OinkTradeCommand implements CommandExecutor {
 			else if(args[0].equalsIgnoreCase("deny") || args[0].equalsIgnoreCase("decline")) {
 				if(p.hasPermission(Reference.PERMISSION_TRADE)) {
 					if(requests.containsKey(p.getUniqueId())) {
-						OfflinePlayer player = Main.getInstance().getServer().getOfflinePlayer(requests.get(p.getUniqueId()));
+						OfflinePlayer player = Bukkit.getOfflinePlayer(requests.get(p.getUniqueId()));
 						p.sendMessage(Reference.PREFIX + TextFormatter.color("&aDenied &6" + player.getName() + "&a's trading request."));
 						if(player.isOnline())
 							player.getPlayer().sendMessage(Reference.PREFIX + TextFormatter.color("&6" + p.getName() + "&c has denied your trading request."));
@@ -124,7 +135,7 @@ public class OinkTradeCommand implements CommandExecutor {
 			
 			else if(args[0].equalsIgnoreCase("spy")) {
 				if(p.hasPermission(Reference.PERMISSION_SPY)) {
-					
+					/* TODO ADD LOGIC */
 				} else {
 					p.sendMessage(Reference.PREFIX + Reference.NO_PERMISSIONS);
 				}
