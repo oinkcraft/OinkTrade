@@ -1,0 +1,61 @@
+[OinkTrade] - A trading GUI for players to trade with each other
+Prefix Requirements - Brackets must be dark grey (&8), single color for the inside/other messages.
+* This plugin is part of the factions overhaul, but can be used in towny.
+* Technically all worlds based on how permissions are set up, but for Oinkcraft usage it'd be factions & towny.
+
+Description:
+This plugin will be for players to trade items/money in a fair way. The aim is for an inventory GUI to be created
+and players will each have a side of the inventory. If they're in an unsafe location, they can still be hit/killed.
+When the inventory is quit out of, the trade is cancelled. There will be options for money at the bottom and 
+a accept/refuse trade. Players won't be able to talk while this is open, will require previous communication.
+GUI should be the size of a normal double chest.
+
+GUI Image and Description:
+Screenshot: http://prntscr.com/oi1v2d
+Iron Bars - Separating the players' available slots for putting in the items they wish to trade.
+Glowstone & Coal - Sample items to trade
+Grey Glass Panes - Can either a) say "Options", or b) Be used to keep track of money increments
+Gold Nugget - Increase money by $100
+Gold Bar - Increase money by $1000
+Gold Block - Increase money by $10,000
+Diamond - Increase money by $100,000
+Light green pane - Confirm trade (Set a player to agreement)
+Red pane - Refuse trade/cancel confirmation (in case the other player changes last second)
+Red concrete - Exit out of trade inventory (feel free to use wool or something else red)
+Blue concrete - Clear money count (in case of too much/misclick) (move all items back to player inv)
+*Bottom row should be the same as the left side, the blue/red concrete on the bottom right should be flipped
+
+Features Needed:
+- The ability to request trades with other players through the /oinktrade command
+    - Commands would be '/otrade <player>' and '/otrade <accept/refuse>'
+    - Trade requests should time out after 20 seconds
+    - Feel free to use /otrade as an alias, or /trade.
+    - Person to initiate trade gets left side, person to accept gets right side
+- When the request is sent/received, both players should be notified to be in a safe place as they might still be able to get hit (if PvP is enabled)
+- **IMPORTANT** Players must be in the same world. This is incredibly important.
+- In the trade GUI that opens up, players can place items from their inventory into their side of the GUI
+    - Cancel the event if the inventory slot clicked isn't on their side
+- Players should not be able to pick up items that are part of the GUI
+    - So if it's an iron bar/that exact slot number, cancel the event
+- Players can click the items on the bottom, as described above, and those will perform their actions
+- For the money, allow a player to add however much they want.
+    - When the trade is confirmed, just cancel the trade as you would if someone refused and tell them they put in too much money.
+- When money is selected, find some way to count it while making that amount visible to the player.
+    - Maybe use the blue concrete via name? Also used to clear it. Displaying that is up to the developer
+- Players can NOT escape the inventory. They must use the red concrete/other red item.
+    - When a player quits with the red concrete/other red item, move each player's respective items back to their inventories
+    - I would recommend a method somewhere so this can be done with they take damage, quit the trade, not enough money, etc. E.g. 'doTrade()' 'cancelTrade()'
+    - If a player is hit/takes damage, cancel the trade as well(^).
+
+Commands:
+- Base: /oinktrade
+    - Aliases: /otrade, /trade
+- Initiate Trade: /oinktrade <playername>
+- Accept/Refuse Trade: /oinktrade <accept/refuse>
+- Spy on a Trade: /oinktrade spy <playername> *This is ENTIRELY optional and to be done ONLY if the rest is complete. Not actually practical, just fun.
+    - It essentially lets someone look at the inventory. Again, optional and to be done ONLY if the rest is complete.
+
+Permissions:
+- oinktrade.trade | Allows someone to send a trade. Not necessary to add another permission to accept trades, but if you really want it can be done.
+- oinktrade.spy | Allows someone to spy on a trade. Again, OPTIONAL. It's not actually practical, just fun.
+*These permissions will be added per-world

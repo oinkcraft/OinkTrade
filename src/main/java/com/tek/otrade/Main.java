@@ -5,6 +5,7 @@ import java.util.logging.Level;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.tek.otrade.OinkTradeCommand.OinkTradeCompleter;
 import com.tek.rcore.RedstoneCore;
 
 import net.milkbowl.vault.economy.Economy;
@@ -42,10 +43,21 @@ public class Main extends JavaPlugin {
 			getServer().getPluginManager().disablePlugin(this);
 			return;
 		}
+		
+		getCommand("oinktrade").setExecutor(new OinkTradeCommand());
+		getCommand("oinktrade").setTabCompleter(new OinkTradeCompleter());
 	}
 	
 	public static Main getInstance() {
 		return instance;
+	}
+	
+	public Economy getEconomy() {
+		return economy;
+	}
+	
+	public RedstoneCore getRedstoneCore() {
+		return redstoneCore;
 	}
 	
 }
