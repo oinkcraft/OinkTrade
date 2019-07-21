@@ -18,8 +18,8 @@ public class Trade {
 	private WrappedProperty<Integer> receiverXp;
 	private WrappedProperty<Integer> senderMoney;
 	private WrappedProperty<Integer> receiverMoney;
-	private WrappedProperty<Boolean> senderConfirm;
-	private WrappedProperty<Boolean> receiverConfirm;
+	private WrappedProperty<Boolean> senderReady;
+	private WrappedProperty<Boolean> receiverReady;
 	
 	public Trade(UUID senderUUID, UUID receiverUUID) {
 		this.senderUUID = senderUUID;
@@ -32,10 +32,22 @@ public class Trade {
 		this.receiverXp = new WrappedProperty<Integer>(0);
 		this.senderMoney = new WrappedProperty<Integer>(0);
 		this.receiverMoney = new WrappedProperty<Integer>(0);
-		this.senderConfirm = new WrappedProperty<Boolean>(false);
-		this.receiverConfirm = new WrappedProperty<Boolean>(false);
+		this.senderReady = new WrappedProperty<Boolean>(false);
+		this.receiverReady = new WrappedProperty<Boolean>(false);
+		
+		this.senderItems.addWatcher(v -> unconfirm());
+		this.receiverItems.addWatcher(v -> unconfirm());
+		this.senderXp.addWatcher(v -> unconfirm());
+		this.receiverXp.addWatcher(v -> unconfirm());
+		this.senderMoney.addWatcher(v -> unconfirm());
+		this.receiverMoney.addWatcher(v -> unconfirm());
 	}
 
+	public void unconfirm() {
+		senderReady.setValue(false);
+		receiverReady.setValue(false);
+	}
+	
 	public UUID getSenderUUID() {
 		return senderUUID;
 	}
@@ -116,20 +128,20 @@ public class Trade {
 		this.receiverMoney = receiverMoney;
 	}
 
-	public WrappedProperty<Boolean> getSenderConfirm() {
-		return senderConfirm;
+	public WrappedProperty<Boolean> getSenderReady() {
+		return senderReady;
 	}
 
-	public void setSenderConfirm(WrappedProperty<Boolean> senderConfirm) {
-		this.senderConfirm = senderConfirm;
+	public void setSenderReady(WrappedProperty<Boolean> senderConfirm) {
+		this.senderReady = senderConfirm;
 	}
 
-	public WrappedProperty<Boolean> getReceiverConfirm() {
-		return receiverConfirm;
+	public WrappedProperty<Boolean> getReceiverReady() {
+		return receiverReady;
 	}
 
-	public void setReceiverConfirm(WrappedProperty<Boolean> receiverConfirm) {
-		this.receiverConfirm = receiverConfirm;
+	public void setReceiverReady(WrappedProperty<Boolean> receiverConfirm) {
+		this.receiverReady = receiverConfirm;
 	}
 	
 }

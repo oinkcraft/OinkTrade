@@ -30,7 +30,7 @@ public class TradeManager {
 	}
 	
 	public void handleTradeEscape(InterfaceCloseEvent event) {
-		
+		/* TODO CANCEL TRADE, GIVE ITEMS BACK */
 	}
 	
 	public List<Trade> getTrades() {
