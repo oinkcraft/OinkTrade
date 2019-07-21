@@ -1,9 +1,9 @@
 name: OinkTrade
 version: 1.0
-api-version: 1.13
-main: com.tek.OinkTrade.Main
+api-version: 1.14
+main: com.tek.otrade.Main
 
-loadbefore: [Vault]
+depend: [Vault, RedstoneCore]
 
 commands:
   oinktrade:
