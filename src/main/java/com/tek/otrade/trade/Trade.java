@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.bukkit.inventory.ItemStack;
 
 import com.tek.rcore.ui.WrappedProperty;
+import com.tek.rcore.ui.events.InterfaceCloseEvent;
 
 public class Trade {
 	
@@ -42,10 +43,14 @@ public class Trade {
 		this.senderMoney.addWatcher(v -> unconfirm());
 		this.receiverMoney.addWatcher(v -> unconfirm());
 	}
-
+	
 	public void unconfirm() {
 		senderReady.setValue(false);
 		receiverReady.setValue(false);
+	}
+	
+	public void cancel(InterfaceCloseEvent event) {
+		/* TODO ADD CANCEL LOGIC */
 	}
 	
 	public UUID getSenderUUID() {
@@ -70,6 +75,7 @@ public class Trade {
 	
 	public void setSenderInterface(TradeInterface senderInterface) {
 		this.senderInterface = senderInterface;
+		senderInterface.getClosedProperty().addWatcher(this::cancel);
 	}
 	
 	public TradeInterface getReceiverInterface() {
@@ -78,6 +84,7 @@ public class Trade {
 	
 	public void setReceiverInterface(TradeInterface receiverInterface) {
 		this.receiverInterface = receiverInterface;
+		receiverInterface.getClosedProperty().addWatcher(this::cancel);
 	}
 
 	public WrappedProperty<ItemStack[][]> getSenderItems() {

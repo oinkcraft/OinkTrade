@@ -62,8 +62,6 @@ public class OinkTradeCommand implements CommandExecutor {
 								
 								TradeInterface senderInterface = new TradeInterface(TradeRole.SENDER, trade, p);
 								TradeInterface receiverInterface = new TradeInterface(TradeRole.RECEIVER, trade, oPlayer.getPlayer());
-								senderInterface.getClosedProperty().addWatcher(Main.getInstance().getTradeManager()::handleTradeEscape);
-								receiverInterface.getClosedProperty().addWatcher(Main.getInstance().getTradeManager()::handleTradeEscape);
 								trade.setSenderInterface(senderInterface);
 								trade.setReceiverInterface(receiverInterface);
 								
