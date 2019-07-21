@@ -16,10 +16,10 @@ import com.tek.rcore.misc.TextFormatter;
 
 public class OinkTradeCommand implements CommandExecutor {
 
-	private Map<UUID, List<UUID>> requests;
+	private Map<UUID, UUID> requests;
 	
 	public OinkTradeCommand() {
-		requests = new HashMap<UUID, List<UUID>>();
+		requests = new HashMap<UUID, UUID>();
 	}
 	
 	@Override
@@ -31,18 +31,50 @@ public class OinkTradeCommand implements CommandExecutor {
 		
 		Player p = (Player) sender;
 		
-		/*
-		 * oinktrade help
-		 * oinktrade accept
-		 * oinktrade deny
-		 * oinktrade spy <player>
-		 * oinktrade send <player>
-		 */
+		if(args.length == 1) {
+			if(args[0].equalsIgnoreCase("help")) {
+				String helpMenu = "\n"
+								+ "&8/oinktrade help &9- &6Displays the help menu.\n"
+								+ "&8/oinktrade accept &9- &6Accepts the current trading request.\n"
+								+ "&8/oinktrade deny &9- &6Denies the current trading request.\n"
+								+ "&8/oinktrade send <player> &9- &6Sends a trading request to someone.\n";
+				
+				if(p.hasPermission(Reference.PERMISSION_SPY)) helpMenu += "&8/oinktrade spy <player> &9- &6Spies on a trading request.\n";
+				
+				p.sendMessage(helpMenu);
+			} 
+			
+			else if(args[0].equalsIgnoreCase("accept")) {
+				
+			}
+			
+			else if(args[0].equalsIgnoreCase("deny") || args[0].equalsIgnoreCase("decline")) {
+				
+			}
+			
+			else {
+				p.sendMessage(Reference.PREFIX + Reference.INVALID_SYNTAX);
+			}
+		} else if(args.length == 2) {
+			if(args[0].equalsIgnoreCase("send")) {
+				
+			}
+			
+			else if(args[0].equalsIgnoreCase("spy")) {
+				
+			}
+			
+			else {
+				p.sendMessage(Reference.PREFIX + Reference.INVALID_SYNTAX);
+			}
+		} else {
+			p.sendMessage(Reference.PREFIX + Reference.INVALID_SYNTAX);
+		}
 		
 		return false;
 	}
 	
-	public Map<UUID, List<UUID>> getRequests() {
+	public Map<UUID, UUID> getRequests() {
 		return requests;
 	}
 	
