@@ -17,8 +17,8 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 import com.tek.otrade.trade.Trade;
-import com.tek.otrade.trade.TradeInterface;
 import com.tek.otrade.trade.TradeRole;
+import com.tek.otrade.ui.TradeInterface;
 import com.tek.rcore.misc.TextFormatter;
 
 public class OinkTradeCommand implements CommandExecutor {

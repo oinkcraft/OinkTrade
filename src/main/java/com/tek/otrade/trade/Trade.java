@@ -2,10 +2,18 @@ package com.tek.otrade.trade;
 
 import java.util.UUID;
 
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import com.tek.otrade.Main;
+import com.tek.otrade.Reference;
+import com.tek.otrade.ui.TradeInterface;
+import com.tek.rcore.item.InventoryUtils;
+import com.tek.rcore.misc.TextFormatter;
 import com.tek.rcore.ui.WrappedProperty;
-import com.tek.rcore.ui.events.InterfaceCloseEvent;
+
+import net.milkbowl.vault.economy.Economy;
 
 public class Trade {
 	
@@ -17,10 +25,11 @@ public class Trade {
 	private WrappedProperty<ItemStack[][]> receiverItems;
 	private WrappedProperty<Integer> senderXp;
 	private WrappedProperty<Integer> receiverXp;
-	private WrappedProperty<Integer> senderMoney;
-	private WrappedProperty<Integer> receiverMoney;
+	private WrappedProperty<Long> senderMoney;
+	private WrappedProperty<Long> receiverMoney;
 	private WrappedProperty<Boolean> senderReady;
 	private WrappedProperty<Boolean> receiverReady;
+	private boolean complete;
 	
 	public Trade(UUID senderUUID, UUID receiverUUID) {
 		this.senderUUID = senderUUID;
@@ -31,32 +40,170 @@ public class Trade {
 		this.receiverItems = new WrappedProperty<ItemStack[][]>(new ItemStack[4][4]);
 		this.senderXp = new WrappedProperty<Integer>(0);
 		this.receiverXp = new WrappedProperty<Integer>(0);
-		this.senderMoney = new WrappedProperty<Integer>(0);
-		this.receiverMoney = new WrappedProperty<Integer>(0);
+		this.senderMoney = new WrappedProperty<Long>(0l);
+		this.receiverMoney = new WrappedProperty<Long>(0l);
 		this.senderReady = new WrappedProperty<Boolean>(false);
 		this.receiverReady = new WrappedProperty<Boolean>(false);
+		this.complete = false;
 		
-		this.senderItems.addWatcher(v -> unconfirm());
-		this.receiverItems.addWatcher(v -> unconfirm());
-		this.senderXp.addWatcher(v -> unconfirm());
-		this.receiverXp.addWatcher(v -> unconfirm());
-		this.senderMoney.addWatcher(v -> unconfirm());
-		this.receiverMoney.addWatcher(v -> unconfirm());
+		this.senderReady.addWatcher(s -> verifyCompletion());
+		this.receiverReady.addWatcher(s -> verifyCompletion());
+		
+		this.senderItems.addWatcher(v -> change());
+		this.receiverItems.addWatcher(v -> change());
+		this.senderXp.addWatcher(v -> change());
+		this.receiverXp.addWatcher(v -> change());
+		this.senderMoney.addWatcher(v -> change());
+		this.receiverMoney.addWatcher(v -> change());
 	}
 	
-	public void unconfirm() {
+	public void verifyCompletion() {
+		if(senderReady.getValue() && receiverReady.getValue()) {
+			complete();
+		}
+	}
+	
+	public void change() {
 		senderReady.setValue(false);
 		receiverReady.setValue(false);
 	}
 	
-	public void cancel(InterfaceCloseEvent event) {
-		/* TODO ADD CANCEL LOGIC */
+	public void complete() {
+		Player sender = Bukkit.getPlayer(senderUUID);
+		Player receiver = Bukkit.getPlayer(receiverUUID);
+		
+		Economy eco = Main.getInstance().getEconomy();
+		double senderBalance = eco.getBalance(sender);
+		double receiverBalance = eco.getBalance(receiver);
+		
+		if(senderBalance >= senderMoney.getValue()) {
+			if(receiverBalance >= receiverMoney.getValue()) {
+				if(sender.getLevel() >= senderXp.getValue()) {
+					if(receiver.getLevel() >= receiverXp.getValue()) {
+						double newSenderMoney = -senderMoney.getValue() + receiverMoney.getValue();
+						double newReceiverMoney = -receiverMoney.getValue() + senderMoney.getValue();
+						if(newSenderMoney > 0) eco.depositPlayer(sender, newSenderMoney);
+						else eco.withdrawPlayer(sender, Math.abs(newSenderMoney));
+						if(newReceiverMoney > 0) eco.depositPlayer(receiver, newReceiverMoney);
+						else eco.withdrawPlayer(receiver, Math.abs(newReceiverMoney));
+						sender.setLevel(sender.getLevel() - senderXp.getValue() + receiverXp.getValue());
+						receiver.setLevel(sender.getLevel() - receiverXp.getValue() + senderXp.getValue());
+						
+						complete = true;
+						
+						sender.sendMessage(Reference.PREFIX + TextFormatter.color("&aTrade completed. Enjoy your new items!"));
+						receiver.sendMessage(Reference.PREFIX + TextFormatter.color("&aTrade completed. Enjoy your new items!"));
+					} else {
+						sender.sendMessage(Reference.PREFIX + TextFormatter.color("&cThe trade was cancelled because &6" + receiver.getName() + " &cdid not have enough XP."));
+						receiver.sendMessage(Reference.PREFIX + TextFormatter.color("&cThe trade was cancelled because you did not have enough XP."));
+					}
+				} else {
+					sender.sendMessage(Reference.PREFIX + TextFormatter.color("&cThe trade was cancelled because you did not have enough XP."));
+					receiver.sendMessage(Reference.PREFIX + TextFormatter.color("&cThe trade was cancelled because &6" + sender.getName() + " &cdid not have enough XP."));
+				}
+			} else {
+				sender.sendMessage(Reference.PREFIX + TextFormatter.color("&cThe trade was cancelled because &6" + receiver.getName() + " &cdid not have enough money."));
+				receiver.sendMessage(Reference.PREFIX + TextFormatter.color("&cThe trade was cancelled because you did not have enough money."));
+			}
+		} else {
+			sender.sendMessage(Reference.PREFIX + TextFormatter.color("&cThe trade was cancelled because you did not have enough money."));
+			receiver.sendMessage(Reference.PREFIX + TextFormatter.color("&cThe trade was cancelled because &6" + sender.getName() + " &cdid not have enough money."));
+		}
+		
+		close(null);
+	}
+	
+	public void close(Player closer) {
+		Player sender = Bukkit.getPlayer(senderUUID);
+		Player receiver = Bukkit.getPlayer(receiverUUID);
+		
+		if(!complete) {
+			if(closer != null) {
+				if(sender.equals(closer)) {
+					sender.sendMessage(Reference.PREFIX + TextFormatter.color("&cYou have cancelled the trade with &6" + receiver.getName() + "&c."));
+					receiver.sendMessage(Reference.PREFIX + TextFormatter.color("&cThe trade was cancelled by &6" + sender.getName() + "&c."));
+				} else {
+					sender.sendMessage(Reference.PREFIX + TextFormatter.color("&cThe trade was cancelled by &6" + receiver.getName() + "&c."));
+					receiver.sendMessage(Reference.PREFIX + TextFormatter.color("&cYou have cancelled the trade with &6" + sender.getName() + "&c."));
+				}
+			}
+			
+			for(int x = 0; x < 4; x++) {
+				for(int y = 0; y < 4; y++) {
+					ItemStack senderItem = senderItems.getValue()[x][y];
+					ItemStack receiverItem = receiverItems.getValue()[x][y];
+					
+					if(senderItem != null) {
+						int amount = senderItem.getAmount();
+						int fit = InventoryUtils.getItemFitCount(sender, senderItem);
+						if(fit < amount) {
+							senderItem.setAmount(fit);
+							sender.getInventory().addItem(senderItem.clone());
+							senderItem.setAmount(amount - fit);
+							sender.getWorld().dropItem(sender.getLocation().add(0, 0.25, 0), senderItem);
+						} else {
+							sender.getInventory().addItem(senderItem);
+						}
+					}
+					
+					if(receiverItem != null) {
+						int amount = receiverItem.getAmount();
+						int fit = InventoryUtils.getItemFitCount(receiver, receiverItem);
+						if(fit < amount) {
+							receiverItem.setAmount(fit);
+							receiver.getInventory().addItem(receiverItem.clone());
+							receiverItem.setAmount(amount - fit);
+							receiver.getWorld().dropItem(receiver.getLocation().add(0, 0.25, 0), receiverItem);
+						} else {
+							receiver.getInventory().addItem(receiverItem);
+						}
+					}
+				}
+			}
+		} else {
+			for(int x = 0; x < 4; x++) {
+				for(int y = 0; y < 4; y++) {
+					ItemStack senderItem = receiverItems.getValue()[x][y];
+					ItemStack receiverItem = senderItems.getValue()[x][y];
+					
+					if(senderItem != null) {
+						int amount = senderItem.getAmount();
+						int fit = InventoryUtils.getItemFitCount(sender, senderItem);
+						if(fit < amount) {
+							senderItem.setAmount(fit);
+							sender.getInventory().addItem(senderItem.clone());
+							senderItem.setAmount(amount - fit);
+							sender.getWorld().dropItem(sender.getLocation().add(0, 0.25, 0), senderItem);
+						} else {
+							sender.getInventory().addItem(senderItem);
+						}
+					}
+					
+					if(receiverItem != null) {
+						int amount = receiverItem.getAmount();
+						int fit = InventoryUtils.getItemFitCount(receiver, receiverItem);
+						if(fit < amount) {
+							receiverItem.setAmount(fit);
+							receiver.getInventory().addItem(receiverItem.clone());
+							receiverItem.setAmount(amount - fit);
+							receiver.getWorld().dropItem(receiver.getLocation().add(0, 0.25, 0), receiverItem);
+						} else {
+							receiver.getInventory().addItem(receiverItem);
+						}
+					}
+				}
+			}
+		}
+		
+		Main.getInstance().getRedstoneCore().getInterfaceManager().closeInterface(sender);
+		Main.getInstance().getRedstoneCore().getInterfaceManager().closeInterface(receiver);
+		Main.getInstance().getTradeManager().unregisterTrade(this);
 	}
 	
 	public UUID getSenderUUID() {
 		return senderUUID;
 	}
-
+	
 	public void setSenderUUID(UUID senderUUID) {
 		this.senderUUID = senderUUID;
 	}
@@ -75,7 +222,6 @@ public class Trade {
 	
 	public void setSenderInterface(TradeInterface senderInterface) {
 		this.senderInterface = senderInterface;
-		senderInterface.getClosedProperty().addWatcher(this::cancel);
 	}
 	
 	public TradeInterface getReceiverInterface() {
@@ -84,7 +230,6 @@ public class Trade {
 	
 	public void setReceiverInterface(TradeInterface receiverInterface) {
 		this.receiverInterface = receiverInterface;
-		receiverInterface.getClosedProperty().addWatcher(this::cancel);
 	}
 
 	public WrappedProperty<ItemStack[][]> getSenderItems() {
@@ -119,19 +264,19 @@ public class Trade {
 		this.receiverXp = receiverXp;
 	}
 
-	public WrappedProperty<Integer> getSenderMoney() {
+	public WrappedProperty<Long> getSenderMoney() {
 		return senderMoney;
 	}
 
-	public void setSenderMoney(WrappedProperty<Integer> senderMoney) {
+	public void setSenderMoney(WrappedProperty<Long> senderMoney) {
 		this.senderMoney = senderMoney;
 	}
 
-	public WrappedProperty<Integer> getReceiverMoney() {
+	public WrappedProperty<Long> getReceiverMoney() {
 		return receiverMoney;
 	}
 
-	public void setReceiverMoney(WrappedProperty<Integer> receiverMoney) {
+	public void setReceiverMoney(WrappedProperty<Long> receiverMoney) {
 		this.receiverMoney = receiverMoney;
 	}
 

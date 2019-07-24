@@ -1,10 +1,13 @@
-package com.tek.otrade.trade;
+package com.tek.otrade.ui;
 
 import java.util.List;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
+import com.tek.otrade.Main;
+import com.tek.otrade.trade.Trade;
+import com.tek.otrade.trade.TradeRole;
 import com.tek.rcore.item.ItemBuilder;
 import com.tek.rcore.misc.TextFormatter;
 import com.tek.rcore.ui.InterfaceComponent;
@@ -58,20 +61,27 @@ public class TradeInterface extends InterfaceState {
 		xpOther.setEditable(false);
 		moneyOther.setEditable(false);
 		
+		xpButton.getClickedProperty().addWatcher(e -> Main.getInstance().getRedstoneCore().getInterfaceManager().openInterface(getOwner(), new ExperienceInterface(role, trade)));
+		moneyButton.getClickedProperty().addWatcher(e -> Main.getInstance().getRedstoneCore().getInterfaceManager().openInterface(getOwner(), new MoneyInterface(role, trade)));
+		
 		if(role.equals(TradeRole.SENDER)) {
 			playerInventory.getInventoryContents().addWatcher(trade.getSenderItems()::setValue);
 			trade.getReceiverItems().addWatcher(otherInventory.getInventoryContents()::setValue);
 			trade.getSenderXp().addWatcher(xpButton::setValue);
 			trade.getSenderMoney().addWatcher(moneyButton::setValue);
+			trade.getReceiverXp().addWatcher(xpOther::setValue);
+			trade.getReceiverMoney().addWatcher(moneyOther::setValue);
 			trade.getSenderReady().addWatcher(playerReadyIndicator.getState()::setValue);
 			trade.getReceiverReady().addWatcher(otherReadyIndicator.getState()::setValue);
 			readyButton.getClickedProperty().addWatcher(e -> trade.getSenderReady().setValue(true));
 			unreadyButton.getClickedProperty().addWatcher(e -> trade.getSenderReady().setValue(false));
-		} 
+		}
 		
 		else if(role.equals(TradeRole.RECEIVER)) {
 			playerInventory.getInventoryContents().addWatcher(trade.getReceiverItems()::setValue);
 			trade.getSenderItems().addWatcher(otherInventory.getInventoryContents()::setValue);
+			trade.getSenderXp().addWatcher(xpOther::setValue);
+			trade.getSenderMoney().addWatcher(moneyOther::setValue);
 			trade.getReceiverXp().addWatcher(xpButton::setValue);
 			trade.getReceiverMoney().addWatcher(moneyButton::setValue);
 			trade.getReceiverReady().addWatcher(playerReadyIndicator.getState()::setValue);
@@ -91,6 +101,11 @@ public class TradeInterface extends InterfaceState {
 		components.add(unreadyButton);
 		components.add(xpOther);
 		components.add(moneyOther);
+	}
+	
+	@Override
+	public void onClose() {
+		trade.close(getOwner());
 	}
 
 }
