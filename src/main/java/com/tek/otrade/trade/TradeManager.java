@@ -13,6 +13,10 @@ public class TradeManager {
 		trades = new ArrayList<Trade>();
 	}
 	
+	public boolean isRegistered(Trade trade) {
+		return trades.contains(trade);
+	}
+	
 	public void registerTrade(Trade trade) {
 		trades.add(trade);
 	}

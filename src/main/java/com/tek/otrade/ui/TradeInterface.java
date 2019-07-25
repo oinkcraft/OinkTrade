@@ -102,10 +102,5 @@ public class TradeInterface extends InterfaceState {
 		components.add(xpOther);
 		components.add(moneyOther);
 	}
-	
-	@Override
-	public void onClose() {
-		trade.close(getOwner());
-	}
 
 }

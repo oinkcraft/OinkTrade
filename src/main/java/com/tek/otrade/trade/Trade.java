@@ -12,6 +12,8 @@ import com.tek.otrade.ui.TradeInterface;
 import com.tek.rcore.item.InventoryUtils;
 import com.tek.rcore.misc.TextFormatter;
 import com.tek.rcore.ui.WrappedProperty;
+import com.tek.rcore.ui.events.InterfaceCloseEvent;
+import com.tek.rcore.ui.events.InterfaceCloseEvent.InterfaceCloseType;
 
 import net.milkbowl.vault.economy.Economy;
 
@@ -29,7 +31,7 @@ public class Trade {
 	private WrappedProperty<Long> receiverMoney;
 	private WrappedProperty<Boolean> senderReady;
 	private WrappedProperty<Boolean> receiverReady;
-	private boolean complete;
+	private boolean completed;
 	
 	public Trade(UUID senderUUID, UUID receiverUUID) {
 		this.senderUUID = senderUUID;
@@ -44,7 +46,7 @@ public class Trade {
 		this.receiverMoney = new WrappedProperty<Long>(0l);
 		this.senderReady = new WrappedProperty<Boolean>(false);
 		this.receiverReady = new WrappedProperty<Boolean>(false);
-		this.complete = false;
+		this.completed = false;
 		
 		this.senderReady.addWatcher(s -> verifyCompletion());
 		this.receiverReady.addWatcher(s -> verifyCompletion());
@@ -89,7 +91,7 @@ public class Trade {
 						sender.setLevel(sender.getLevel() - senderXp.getValue() + receiverXp.getValue());
 						receiver.setLevel(sender.getLevel() - receiverXp.getValue() + senderXp.getValue());
 						
-						complete = true;
+						completed = true;
 						
 						sender.sendMessage(Reference.PREFIX + TextFormatter.color("&aTrade completed. Enjoy your new items!"));
 						receiver.sendMessage(Reference.PREFIX + TextFormatter.color("&aTrade completed. Enjoy your new items!"));
@@ -110,16 +112,18 @@ public class Trade {
 			receiver.sendMessage(Reference.PREFIX + TextFormatter.color("&cThe trade was cancelled because &6" + sender.getName() + " &cdid not have enough money."));
 		}
 		
-		close(null);
+		close(new InterfaceCloseEvent(null, InterfaceCloseType.PROGRAMMATICAL, senderInterface));
 	}
 	
-	public void close(Player closer) {
+	public void close(InterfaceCloseEvent event) {
 		Player sender = Bukkit.getPlayer(senderUUID);
 		Player receiver = Bukkit.getPlayer(receiverUUID);
 		
-		if(!complete) {
-			if(closer != null) {
-				if(sender.equals(closer)) {
+		if(!Main.getInstance().getTradeManager().isRegistered(this)) return;
+			
+		if(event.getCloseType().equals(InterfaceCloseType.PLAYER) || (event.getCloseType().equals(InterfaceCloseType.PROGRAMMATICAL) && !completed)) {
+			if(event.getCloseType().equals(InterfaceCloseType.PLAYER)) {
+				if(sender.equals(event.getPlayer())) {
 					sender.sendMessage(Reference.PREFIX + TextFormatter.color("&cYou have cancelled the trade with &6" + receiver.getName() + "&c."));
 					receiver.sendMessage(Reference.PREFIX + TextFormatter.color("&cThe trade was cancelled by &6" + sender.getName() + "&c."));
 				} else {
@@ -133,7 +137,7 @@ public class Trade {
 					ItemStack senderItem = senderItems.getValue()[x][y];
 					ItemStack receiverItem = receiverItems.getValue()[x][y];
 					
-					if(senderItem != null) {
+					if(!InventoryUtils.isItemEmpty(senderItem)) {
 						int amount = senderItem.getAmount();
 						int fit = InventoryUtils.getItemFitCount(sender, senderItem);
 						if(fit < amount) {
@@ -146,7 +150,7 @@ public class Trade {
 						}
 					}
 					
-					if(receiverItem != null) {
+					if(!InventoryUtils.isItemEmpty(receiverItem)) {
 						int amount = receiverItem.getAmount();
 						int fit = InventoryUtils.getItemFitCount(receiver, receiverItem);
 						if(fit < amount) {
@@ -160,13 +164,13 @@ public class Trade {
 					}
 				}
 			}
-		} else {
+		} else if(event.getCloseType().equals(InterfaceCloseType.PROGRAMMATICAL) && completed) {
 			for(int x = 0; x < 4; x++) {
 				for(int y = 0; y < 4; y++) {
 					ItemStack senderItem = receiverItems.getValue()[x][y];
 					ItemStack receiverItem = senderItems.getValue()[x][y];
-					
-					if(senderItem != null) {
+						
+					if(!InventoryUtils.isItemEmpty(senderItem)) {
 						int amount = senderItem.getAmount();
 						int fit = InventoryUtils.getItemFitCount(sender, senderItem);
 						if(fit < amount) {
@@ -178,8 +182,8 @@ public class Trade {
 							sender.getInventory().addItem(senderItem);
 						}
 					}
-					
-					if(receiverItem != null) {
+						
+					if(!InventoryUtils.isItemEmpty(receiverItem)) {
 						int amount = receiverItem.getAmount();
 						int fit = InventoryUtils.getItemFitCount(receiver, receiverItem);
 						if(fit < amount) {
@@ -195,9 +199,9 @@ public class Trade {
 			}
 		}
 		
-		Main.getInstance().getRedstoneCore().getInterfaceManager().closeInterface(sender);
-		Main.getInstance().getRedstoneCore().getInterfaceManager().closeInterface(receiver);
 		Main.getInstance().getTradeManager().unregisterTrade(this);
+		Main.getInstance().getRedstoneCore().getInterfaceManager().close(sender);
+		Main.getInstance().getRedstoneCore().getInterfaceManager().close(receiver);
 	}
 	
 	public UUID getSenderUUID() {
@@ -222,6 +226,7 @@ public class Trade {
 	
 	public void setSenderInterface(TradeInterface senderInterface) {
 		this.senderInterface = senderInterface;
+		this.senderInterface.getClosedProperty().addWatcher(this::close);
 	}
 	
 	public TradeInterface getReceiverInterface() {
@@ -230,6 +235,7 @@ public class Trade {
 	
 	public void setReceiverInterface(TradeInterface receiverInterface) {
 		this.receiverInterface = receiverInterface;
+		this.receiverInterface.getClosedProperty().addWatcher(this::close);
 	}
 
 	public WrappedProperty<ItemStack[][]> getSenderItems() {
