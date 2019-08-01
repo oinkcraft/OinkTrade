@@ -1,5 +1,7 @@
 package com.tek.otrade.trade;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -21,6 +23,7 @@ public class Trade {
 	
 	private UUID senderUUID;
 	private UUID receiverUUID;
+	private List<UUID> spies;
 	private TradeInterface senderInterface;
 	private TradeInterface receiverInterface;
 	private WrappedProperty<ItemStack[][]> senderItems;
@@ -36,6 +39,7 @@ public class Trade {
 	public Trade(UUID senderUUID, UUID receiverUUID) {
 		this.senderUUID = senderUUID;
 		this.receiverUUID = receiverUUID;
+		this.spies = new ArrayList<UUID>(8);
 		this.senderInterface = null;
 		this.receiverInterface = null;
 		this.senderItems = new WrappedProperty<ItemStack[][]>(new ItemStack[4][4]);
@@ -121,6 +125,13 @@ public class Trade {
 		
 		if(!Main.getInstance().getTradeManager().isRegistered(this)) return;
 			
+		for(UUID spyUUID : spies) {
+			Player spy = Bukkit.getPlayer(spyUUID);
+			if(spy != null) {
+				Main.getInstance().getRedstoneCore().getInterfaceManager().close(spy);
+			}
+		}
+		
 		if(event.getCloseType().equals(InterfaceCloseType.PLAYER) || (event.getCloseType().equals(InterfaceCloseType.PROGRAMMATICAL) && !completed)) {
 			if(event.getCloseType().equals(InterfaceCloseType.PLAYER)) {
 				if(sender.equals(event.getPlayer())) {
@@ -218,6 +229,14 @@ public class Trade {
 
 	public void setReceiverUUID(UUID receiverUUID) {
 		this.receiverUUID = receiverUUID;
+	}
+	
+	public List<UUID> getSpies() {
+		return spies;
+	}
+	
+	public void setSpies(List<UUID> spies) {
+		this.spies = spies;
 	}
 	
 	public TradeInterface getSenderInterface() {

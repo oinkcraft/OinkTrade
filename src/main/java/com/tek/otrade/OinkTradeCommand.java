@@ -18,6 +18,7 @@ import org.bukkit.entity.Player;
 
 import com.tek.otrade.trade.Trade;
 import com.tek.otrade.trade.TradeRole;
+import com.tek.otrade.ui.SpyInterface;
 import com.tek.otrade.ui.TradeInterface;
 import com.tek.rcore.misc.TextFormatter;
 
@@ -42,10 +43,9 @@ public class OinkTradeCommand implements CommandExecutor {
 			if(args[0].equalsIgnoreCase("help")) {
 				String helpMenu = "&7/oinktrade help &9- &6Displays the help menu.\n"
 								+ "&7/oinktrade accept &9- &6Accepts the current trading request.\n"
-								+ "&7/oinktrade deny &9- &6Denies the current trading request.\n"
-								+ "&7/oinktrade send <player> &9- &6Sends a trading request to someone.\n";
-				
-				if(p.hasPermission(Reference.PERMISSION_SPY)) helpMenu += "&7/oinktrade spy <player> &9- &6Spies on a trading request.";
+								+ "&7/oinktrade deny &9- &6Denies the current trading request.\n";
+				if(p.hasPermission(Reference.PERMISSION_SPY)) helpMenu += "&7/oinktrade spy &9- &6Spies on a trading request.\n";
+				helpMenu += "&7/oinktrade send <player> &9- &6Sends a trading request to someone.";
 				
 				p.sendMessage(TextFormatter.color(helpMenu));
 			} 
@@ -102,6 +102,14 @@ public class OinkTradeCommand implements CommandExecutor {
 				}
 			}
 			
+			else if(args[0].equalsIgnoreCase("spy")) {
+				if(p.hasPermission(Reference.PERMISSION_SPY)) {
+					Main.getInstance().getRedstoneCore().getInterfaceManager().openInterface(p, new SpyInterface());
+				} else {
+					p.sendMessage(Reference.PREFIX + Reference.NO_PERMISSIONS);
+				}
+			}
+			
 			else {
 				p.sendMessage(Reference.PREFIX + Reference.INVALID_SYNTAX);
 			}
@@ -144,14 +152,6 @@ public class OinkTradeCommand implements CommandExecutor {
 					} else {
 						p.sendMessage(Reference.PREFIX + TextFormatter.color("&cNo player was found by that name."));
 					}
-				} else {
-					p.sendMessage(Reference.PREFIX + Reference.NO_PERMISSIONS);
-				}
-			}
-			
-			else if(args[0].equalsIgnoreCase("spy")) {
-				if(p.hasPermission(Reference.PERMISSION_SPY)) {
-					/* TODO ADD TRADE SELECTOR MENU ETC */
 				} else {
 					p.sendMessage(Reference.PREFIX + Reference.NO_PERMISSIONS);
 				}
