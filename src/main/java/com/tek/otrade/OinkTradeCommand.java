@@ -179,7 +179,7 @@ public class OinkTradeCommand implements CommandExecutor {
 				Player p = (Player) sender;
 				
 				if(args.length == 1) {
-					return Arrays.asList("help", "accept", "deny", "decline", "send", "spy").stream()
+					return Arrays.asList("help", "accept", "deny", "decline", "send", (p.hasPermission(Reference.PERMISSION_SPY) ? "spy" : "")).stream()
 							.filter(str -> str.toLowerCase().startsWith(args[0].toLowerCase()))
 							.collect(Collectors.toList());
 				}

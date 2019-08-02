@@ -4,13 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.Material;
-import org.bukkit.event.inventory.ClickType;
-import org.bukkit.inventory.ItemStack;
 
 import com.tek.otrade.Main;
 import com.tek.otrade.trade.Trade;
 import com.tek.rcore.item.ItemBuilder;
-import com.tek.rcore.item.SkullFactory;
 import com.tek.rcore.misc.TextFormatter;
 import com.tek.rcore.ui.InterfaceComponent;
 import com.tek.rcore.ui.InterfaceState;
@@ -43,10 +40,10 @@ public class SpyInterface extends InterfaceState {
 		
 		for(Trade trade : trades) {
 			TradeComponent component = new TradeComponent(trade);
-			tradeList.addComponent(component);
+			tradeList.addItem(component);
 			
 			trade.getSenderInterface().getClosedProperty().addWatcher(e -> {
-				tradeList.removeComponent(component);
+				tradeList.removeItem(component);
 				trades.remove(trade);
 			});
 		}
@@ -66,45 +63,14 @@ public class SpyInterface extends InterfaceState {
 			if(!trades.contains(trade)) {
 				trades.add(trade);
 				TradeComponent component = new TradeComponent(trade);
-				tradeList.addComponent(component);
+				tradeList.addItem(component);
 				
 				trade.getSenderInterface().getClosedProperty().addWatcher(e -> {
-					tradeList.removeComponent(component);
+					tradeList.removeItem(component);
 					trades.remove(trade);
 				});
 			}
 		}
-	}
-	
-	public static class TradeComponent extends ButtonComponent {
-
-		private Trade trade;
-		private ItemStack senderSkull;
-		private ItemStack receiverSkull;
-		private long timer;
-		
-		public TradeComponent(Trade trade) {
-			super(-1, -1, null);
-			this.trade = trade;
-			this.senderSkull = SkullFactory.createSkull(trade.getSenderUUID());
-			this.receiverSkull = SkullFactory.createSkull(trade.getReceiverUUID());
-			this.timer = 0;
-		}
-		
-		@Override
-		public void tick(InterfaceState interfaceState) {
-			super.tick(interfaceState);
-			
-			timer++;
-			int frame = (int) (timer % 20);
-			this.setItem(frame < 10 ? senderSkull : receiverSkull);
-		}
-		
-		@Override
-		public void onClick(InterfaceState interfaceState, ClickType type, ItemStack item, int x, int y) {
-			interfaceState.getOwner().sendMessage("spy on " + trade.getSenderUUID());
-		}
-		
 	}
 
 }
