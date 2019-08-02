@@ -12,6 +12,7 @@ import com.tek.rcore.item.SkullFactory;
 import com.tek.rcore.misc.TextFormatter;
 import com.tek.rcore.ui.InterfaceState;
 import com.tek.rcore.ui.components.IPaginatedItem;
+import com.tek.rcore.ui.events.InterfaceCloseEvent.InterfaceCloseType;
 
 public class TradeComponent implements IPaginatedItem {
 
@@ -47,7 +48,14 @@ public class TradeComponent implements IPaginatedItem {
 	public void click(InterfaceState interfaceState, ClickType type, ItemStack item) {
 		Player sender = Bukkit.getPlayer(trade.getSenderUUID());
 		Player receiver = Bukkit.getPlayer(trade.getReceiverUUID());
-		Main.getInstance().getRedstoneCore().getInterfaceManager().openInterface(interfaceState.getOwner(), new SpyTradeInterface(trade, sender, receiver));
+		
+		trade.getSpies().add(interfaceState.getUUID());
+		SpyTradeInterface spyTradeInterface = new SpyTradeInterface(trade, sender, receiver);
+		spyTradeInterface.getClosedProperty().addWatcher(e -> {
+			if(e.getCloseType().equals(InterfaceCloseType.PLAYER))
+				trade.getSpies().remove(interfaceState.getUUID());
+		});
+		Main.getInstance().getRedstoneCore().getInterfaceManager().openInterface(interfaceState.getOwner(), spyTradeInterface);
 	}
 	
 }
